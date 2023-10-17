@@ -1,21 +1,24 @@
 pkgname=curl
-pkgver=9999
+pkgver=8.4.1DEV
 pkgrel=1
-url="https://github.com/d3m3vilurr/vita-curl"
-source=("git+https://github.com/d3m3vilurr/vita-curl.git")
+url="https://github.com/curl/curl" # pulls from upstream now
+source=("git+https://github.com/curl/curl.git")
 sha256sums=('SKIP')
-depends=('openssl' 'zlib')
+depends=('openssl')
+# does upstream cURL really need anything else?, compared to legacy vita-curl...
 
 build() {
-  cd vita-curl
-  ./buildconf
-  ./configure --host=arm-vita-eabi  --prefix=$VITASDK/arm-vita-eabi/
-  cp lib/config-vita.h lib/curl_config.h
+  cp ../config-vita.h curl/lib/curl_config.h
+  cd curl
+  #./buildconf - not recommended on newer cURL builds
+  autoreconf -fi
+  # TODO: resolve "Threaded resolver enabled but no thread library found" error?
+  ./configure --host=arm-vita-eabi  --prefix=$VITASDK/arm-vita-eabi/ --with-openssl --disable-threaded-resolver
   make -j$(nproc)
 }
 
 package () {
-  cd vita-curl
+  cd curl
   make DESTDIR=$pkgdir install
   rm -rf $pkgdir/$prefix/share/man # remove useless man pages
 }
